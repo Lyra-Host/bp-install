@@ -29,7 +29,7 @@ class BlueprintInstaller(commands.Cog):
         print(f"Cron triggered. Queue length: {len(self.install_queue)}, Currently processing: {self.is_processing}")
         
         if self.is_processing:
-            print("[v0] Still processing previous batch. Skipping this cycle.")
+            print("Still processing previous batch. Skipping this cycle.")
             return
         
         if len(self.install_queue) == 0:
@@ -65,7 +65,7 @@ class BlueprintInstaller(commands.Cog):
         await interaction.response.send_message(
             f"📦 Blueprint `{file.filename}` added to queue. Position: {len(self.install_queue)}\n{status}"
         )
-        print(f"[v0] Added {file.filename} to queue. Queue length: {len(self.install_queue)}")
+        print(f"Added {file.filename} to queue. Queue length: {len(self.install_queue)}")
     
     @app_commands.command(name="stop-installations", description="Stop the blueprint installation queue")
     @app_commands.checks.has_permissions(administrator=True)
@@ -107,7 +107,7 @@ class BlueprintInstaller(commands.Cog):
         
         while len(self.install_queue) > 0:
             if self.stop_requested:
-                print("[v0] Stop requested. Halting queue processing.")
+                print("Stop requested. Halting queue processing.")
                 break
             
             queue_item = self.install_queue.pop(0)
@@ -139,7 +139,7 @@ class BlueprintInstaller(commands.Cog):
                         with open(temp_file_path, "wb") as f:
                             f.write(file_data)
                         
-                        print(f"[v0] Downloaded {file_name} to {temp_file_path}")
+                        print(f"Downloaded {file_name} to {temp_file_path}")
                         
                         with open(target_file_path, "wb") as f:
                             f.write(file_data)
@@ -175,7 +175,7 @@ class BlueprintInstaller(commands.Cog):
                 await status_message.edit(content=None, embed=embed)
         
         except Exception as error:
-            print(f"[v0] Error processing blueprint: {error}")
+            print(f"Error processing blueprint: {error}")
             await interaction.followup.send(f"❌ Error processing `{file_name}`: {str(error)}")
     
     async def run_blueprint_install(self, file_name, status_message):
@@ -237,7 +237,7 @@ class BlueprintInstaller(commands.Cog):
                         process.stdin.write(b"yes\n")
                         await process.stdin.drain()
                     elif "press enter" in text.lower():
-                        print("[v0] Auto-responding with: Enter")
+                        print("Auto-responding with: Enter")
                         process.stdin.write(b"\n")
                         await process.stdin.drain()
             
@@ -256,7 +256,7 @@ class BlueprintInstaller(commands.Cog):
             
             return_code = await process.wait()
             
-            print(f"[v0] Process exited with code {return_code}")
+            print(f"Process exited with code {return_code}")
             
             full_output = output + (f"\n\nErrors:\n{error_output}" if error_output else "")
             
