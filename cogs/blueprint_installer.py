@@ -42,33 +42,30 @@ class BlueprintInstaller(commands.Cog):
     async def before_process_queue_task(self):
         await self.bot.wait_until_ready()
     
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author.bot:
-            return
-        
-        if not message.attachments:
-            return
-        
-        blueprint_files = [att for att in message.attachments if att.filename.endswith(".blueprint")]
-        
-        if not blueprint_files:
-            return
-        
-        for attachment in blueprint_files:
-            queue_item = {
-                "message": message,
-                "attachment": attachment,
-                "added_at": datetime.now()
-            }
-            self.install_queue.append(queue_item)
-            
-            status = "⚙️ Currently processing blueprints. Your file will be installed in the next cycle." if self.is_processing else "⏳ Will be processed in the next scheduled run (every 5 minutes)."
-            
-            await message.reply(
-                f"📦 Blueprint `{attachment.filename}` added to queue. Position: {len(self.install_queue)}\n{status}"
+    @app_commands.command(name="install", description="Install a blueprint file")
+    @app_commands.describe(file="The .blueprint file to install")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def install_blueprint(self, interaction: discord.Interaction, file: discord.Attachment):
+        if not file.filename.endswith(".blueprint"):
+            await interaction.response.send_message(
+                "❌ Invalid file type. Please upload a `.blueprint` file.",
+                ephemeral=True
             )
-            print(f"[v0] Added {attachment.filename} to queue. Queue length: {len(self.install_queue)}")
+            return
+        
+        queue_item = {
+            "interaction": interaction,
+            "attachment": file,
+            "added_at": datetime.now()
+        }
+        self.install_queue.append(queue_item)
+        
+        status = "⚙️ Currently processing blueprints. Your file will be installed in the next cycle." if self.is_processing else "⏳ Will be processed in the next scheduled run (every 5 minutes)."
+        
+        await interaction.response.send_message(
+            f"📦 Blueprint `{file.filename}` added to queue. Position: {len(self.install_queue)}\n{status}"
+        )
+        print(f"[v0] Added {file.filename} to queue. Queue length: {len(self.install_queue)}")
     
     @app_commands.command(name="stop-installations", description="Stop the blueprint installation queue")
     @app_commands.checks.has_permissions(administrator=True)
@@ -116,7 +113,7 @@ class BlueprintInstaller(commands.Cog):
             queue_item = self.install_queue.pop(0)
             print(f"[v0] Processing blueprint. Remaining in queue: {len(self.install_queue)}")
             
-            await self.process_blueprint(queue_item["message"], queue_item["attachment"])
+            await self.process_blueprint(queue_item["interaction"], queue_item["attachment"])
             
             if len(self.install_queue) > 0 and not self.stop_requested:
                 print("[v0] Waiting 10 seconds before next blueprint...")
@@ -126,13 +123,13 @@ class BlueprintInstaller(commands.Cog):
         self.stop_requested = False
         print("[v0] Finished processing all blueprints in queue")
     
-    async def process_blueprint(self, message, attachment):
+    async def process_blueprint(self, interaction, attachment):
         file_name = attachment.filename
         temp_file_path = f"/tmp/{file_name}"
         target_file_path = os.path.join(PTERODACTYL_PATH, file_name)
         
         try:
-            status_message = await message.reply(f"📦 Processing blueprint: `{file_name}`...")
+            status_message = await interaction.followup.send(f"📦 Processing blueprint: `{file_name}`...")
             
             async with aiohttp.ClientSession() as session:
                 async with session.get(attachment.url) as response:
@@ -179,7 +176,7 @@ class BlueprintInstaller(commands.Cog):
         
         except Exception as error:
             print(f"[v0] Error processing blueprint: {error}")
-            await message.reply(f"❌ Error processing `{file_name}`: {str(error)}")
+            await interaction.followup.send(f"❌ Error processing `{file_name}`: {str(error)}")
     
     async def run_blueprint_install(self, file_name, status_message):
         command = ["blueprint", "-i", file_name]
