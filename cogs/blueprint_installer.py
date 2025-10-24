@@ -44,7 +44,7 @@ class BlueprintInstaller(commands.Cog):
     
     @app_commands.command(name="install", description="Install a blueprint file")
     @app_commands.describe(file="The .blueprint file to install")
-    @app_commands.checks.has_permissions(administrator=True)
+   # @app_commands.checks.has_permissions(administrator=True)
     async def install_blueprint(self, interaction: discord.Interaction, file: discord.Attachment):
         if not file.filename.endswith(".blueprint"):
             await interaction.response.send_message(
