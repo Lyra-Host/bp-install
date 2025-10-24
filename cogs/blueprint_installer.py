@@ -18,22 +18,22 @@ class BlueprintInstaller(commands.Cog):
         self.stop_requested = False
         
         self.process_queue_task.start()
-        print("[v0] Blueprint installer cog loaded")
-        print("[v0] Cron task scheduled to run every 5 minutes")
+        print("Blueprint installer cog loaded")
+        print("Cron task scheduled to run every 5 minutes")
     
     def cog_unload(self):
         self.process_queue_task.cancel()
     
     @tasks.loop(minutes=5)
     async def process_queue_task(self):
-        print(f"[v0] Cron triggered. Queue length: {len(self.install_queue)}, Currently processing: {self.is_processing}")
+        print(f"Cron triggered. Queue length: {len(self.install_queue)}, Currently processing: {self.is_processing}")
         
         if self.is_processing:
             print("[v0] Still processing previous batch. Skipping this cycle.")
             return
         
         if len(self.install_queue) == 0:
-            print("[v0] Queue is empty. Nothing to process.")
+            print("Queue is empty. Nothing to process.")
             return
         
         await self.process_entire_queue()
